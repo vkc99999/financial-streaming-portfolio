@@ -1,0 +1,41 @@
+{
+  "date": "2026-09-11",
+  "result": "passed",
+  "test_command": "python3 scripts/smoke.py",
+  "environment": "Local Docker Desktop; PostgreSQL 16.9, Debezium 3.0.8.Final, Kafka 3.9.0, Flink 1.20.1, Python 3.12.10 API image",
+  "checked": [
+    "Initial source snapshot reaches analytics",
+    "Two-line invoice creation totals exactly 100.30 USD",
+    "Duplicate supplier invoice number is rejected",
+    "Draft due-date update reaches analytics",
+    "Posting changes analytical status",
+    "Repeated post is accepted without another business posting",
+    "Posted invoice edits and deletion are rejected",
+    "Draft deletion removes its analytical rows",
+    "Invalid second line rolls back the source transaction; corrected retry succeeds"
+  ],
+  "create_to_visible_seconds": 1.267,
+  "invoice_id": "ecbf5417-6dc4-4dc0-ad31-783d0fe13c7b",
+  "database_and_validation_suite": {
+    "command": "docker compose exec -T -e RUN_SOURCE_DB_TESTS=1 api python -m unittest discover -s tests -v",
+    "passed": 12,
+    "skipped": 0,
+    "failed": 0,
+    "duration_seconds": 1.135
+  },
+  "checkpoint_observation": {
+    "job_id": "4a4b51bb0c798810f0614ea40e0654e5",
+    "state": "RUNNING",
+    "completed": 13,
+    "failed": 1,
+    "in_progress": 0,
+    "note": "The checkpoint endpoint returned no latest failed-checkpoint detail. Completed checkpoints were observed; this is not a crash/recovery test."
+  },
+  "limits": [
+    "One smoke run, not a latency percentile or sustained-load benchmark",
+    "Database tests ran against PostgreSQL, not mocks",
+    "No independent source-to-report reconciliation yet",
+    "No full-cluster checkpoint restoration or failure-replay guarantee yet",
+    "Existing empty database volumes were initialized manually after a previous failed bootstrap; the corrected images separately passed fresh-storage initialization checks recorded in 2026-09-11-bootstrap.json"
+  ]
+}

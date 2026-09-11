@@ -1,0 +1,12 @@
+[
+  {
+    "database": "source",
+    "fresh_volume_bootstrap": "passed",
+    "row_count": 1
+  },
+  {
+    "database": "analytics",
+    "fresh_volume_bootstrap": "passed",
+    "row_count": 0
+  }
+]
