@@ -1,6 +1,6 @@
 # Data model — review draft
 
-Grain means exactly what one row represents. These are logical models, not final SQL migrations. Keys, change ordering, and stream-join implementation will be specified in the architecture phase.
+Grain means exactly what one row represents. These are planned logical models, not final SQL migrations. ADRs will define keys, change ordering, and stream joins.
 
 ## Operational model: preserve valid business transactions
 
@@ -10,7 +10,7 @@ Grain means exactly what one row represents. These are logical models, not final
 | cost_center | One cost center | Stable ID; descriptive fields and profit-center assignment. |
 | profit_center | One profit center | Stable ID and description; groups cost centers for reporting. |
 | project | One project/WBS element | Stable ID; optional parent project and active dates. |
-| org_assignment_history | One cost-center assignment effective interval | Links a cost center to a profit center with non-overlapping effective dates. Needed for independent historical reconciliation. |
+| org_assignment_history | One cost-center assignment for a date range | Links a cost center to a profit center with non-overlapping effective dates. Needed for independent historical reconciliation. |
 | invoice | One supplier invoice | Supplier, invoice number, status, issue/due/posting dates, currency. Unique supplier invoice identity. |
 | invoice_line | One line of an invoice | Invoice, line number, description, amount, cost center. Unique invoice + line number. |
 | line_project_allocation | One invoice-line allocation to a project | Stores allocated amount; allows multiple projects per line without duplicating the line's full amount. |
@@ -33,11 +33,11 @@ Application transactions and database constraints jointly enforce these rules. D
 | fact_invoice_balance_snapshot — periodic snapshot | One posted invoice at one explicit daily observation cutoff | Outstanding amount and overdue amount; how did balances change across observed days? |
 | fact_invoice_lifecycle — accumulating snapshot | One invoice | Creation, approval, posting, first-payment, and current full-settlement milestones; how long does processing take? |
 
-These fact tables describe different aspects of the same business activity: do not add their monetary measures together. Separate payment facts avoid counting a payment multiple times when it is split across invoices. Invoice IDs carried directly on facts are a degenerate dimension: a business identifier without a separate descriptive dimension table.
+These facts describe the same activity from different views; do not add their amounts together. Separate payment facts avoid counting a payment multiple times when it is split across invoices. Invoice IDs carried directly on facts are a degenerate dimension: a business identifier without a separate descriptive dimension table.
 
-All reversal activities have a stable identity and link to the original activity. Reprocessing the same source change must update/reuse that identity, never create another financial posting. Lifecycle facts can change again after a reversal; they do not replace the underlying activity history.
+Each reversal has a stable ID and links to the original activity. Reprocessing must reuse that ID, never create another posting. Lifecycle facts can change again after a reversal; they do not replace the underlying activity history.
 
-Snapshots are invoked manually in this on-demand project. A missed day has no snapshot unless explicitly reconstructed from sufficient business history. Never fill past dates using today's balance. Historical backfill of snapshots and cumulative lifecycle transitions is a later design decision.
+Create snapshots manually. A missed day has no snapshot unless enough business history exists to rebuild it. Never use today's balance for past dates. Backfilling snapshots and earlier lifecycle changes needs a later design.
 
 ## Dimensions and bridge
 
@@ -52,7 +52,7 @@ Snapshots are invoked manually in this on-demand project. A missed day has no sn
 
 Dimension version keys are distinct from stable source business IDs. Type 2 versions carry effective-from/effective-to dates; intervals must not overlap for a given business ID. Facts use the version effective at posting time, not whichever dimension row arrived most recently.
 
-Late or retroactive changes need an explicit restatement policy. Proposed first behavior: resolve previously unknown mappings when authoritative source history arrives; flag retroactive changes affecting already-resolved facts for controlled reprocessing. Do not silently apply today's organization to all history.
+Late or retroactive changes need an explicit restatement policy. Proposed first behavior: resolve previously unknown mappings when the source provides the required history; flag retroactive changes affecting already-resolved facts for controlled reprocessing. Do not silently apply today's organization to all history.
 
 ## Example: why grain matters
 
@@ -72,11 +72,11 @@ Project allocations, by contrast, are explicit on invoice lines. A $60 line spli
 - Net allocated amount = posted payment allocations minus allocations reversed with their payments.
 - Invoice outstanding amount = net invoiced amount minus net allocated amount, under the first-scope restrictions.
 - Invoice total must equal its line total; payment total must equal its allocation total in this scope.
-- Project allocations must conserve each line's amount, including an explicit unassigned allocation if allowed.
+- Project allocations must add up to each line's amount, including an explicit unassigned allocation if allowed.
 - Sum only within the agreed currency and comparable scope. Never sum daily balance snapshots across dates to describe one current balance.
 - Check identities and field values in addition to sums: two incorrect records can cancel in an aggregate.
-- Independently derive expected analytical values from source business tables at a matched cutoff. Reusing the same transformation code for expected and actual values can reproduce the same bug.
+- Independently derive expected analytical values from source business tables at the same agreed source boundary. Reusing the same transformation code for expected and actual values can reproduce the same bug.
 
 ## Decisions before implementation
 
-Confirm the first-scope financial restrictions, historical organization mapping policy, and staged introduction of snapshots. Then define transaction boundaries, CDC snapshot behavior, historical source records, fact keys, handling of cross-table arrival order, and recovery guarantees in ADRs.
+Confirm financial restrictions, historical organization mappings, and when to add snapshots. Then use ADRs to define transaction boundaries, CDC snapshots, past source records, fact keys, cross-table arrival order, and recovery guarantees.

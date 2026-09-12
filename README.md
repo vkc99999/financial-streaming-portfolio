@@ -1,45 +1,43 @@
 # Financial streaming portfolio
 
-Status: first invoice flow verified end to end on 2026-09-11. Twelve validation/database tests passed, followed by the streaming smoke test. This is a learning project, not a completed financial platform.
+Status: first invoice flow verified end to end on 2026-09-11; 12 validation/database tests and the streaming smoke test passed. This is a learning project, not a complete financial platform.
 
-Build a local supplier-invoice and payment system whose database changes continuously update analytics while it is running. Demonstrate correct reporting through late changes, duplicate delivery, crashes, and replay. Add AI only after the underlying results can be independently verified.
+Goal: build a local supplier-invoice and payment system that continuously updates analytics while running. Verify reporting through late changes, duplicate delivery, crashes, and replay before adding AI.
 
 - [Requirements](requirements.md): scope, operating limits, success criteria, and test scenarios.
 - [Data model](data-model.md): operational tables, analytical facts and dimensions, and financial rules.
-- [Architecture options](architecture.md): three alternatives and the recommended direction for discussion.
-- [Accepted topology](ADRs/001-local-streaming-topology.md) and [first-slice rules](ADRs/002-first-invoice-slice.md).
+- [Architecture options](architecture.md): three alternatives and why we chose Kafka + Flink.
+- [Accepted topology](ADRs/001-local-streaming-topology.md) and [first invoice flow rules](ADRs/002-first-invoice-slice.md).
 - [Runbook](RUNBOOK.md): local setup, tests, stop behavior, and limitations.
 - [Streaming test evidence](evidence/2026-09-11-invoice-smoke.json), [fresh-database checks](evidence/2026-09-11-bootstrap.json), and [recorded incidents](evidence/incidents.json) for later AI investigation work.
 
-## Current slice
+## What works now
 
 Python API → source PostgreSQL → Debezium → Kafka → Flink SQL → analytics PostgreSQL.
 
-Create an invoice with lines, update its draft due date, delete a draft, or post it. A reporting endpoint lists current analytical invoice totals. API input validation, database transaction boundaries, and database immutability triggers are included. One historical fixture exercises the initial CDC snapshot.
+Create invoices with lines, update draft due dates, delete drafts, and post invoices. A reporting endpoint lists current invoice totals. API validation, database transactions, and triggers protect the data. One sample invoice dated in the past tests the initial CDC snapshot.
 
-Not implemented yet: payments/reversals, full facts and dimensions, a visual dashboard, independent reconciliation, historical generator, performance benchmarks, full-cluster checkpoint restore, and AI. The logical data-model document describes the intended later scope, not existing tables.
+Not implemented yet: payments/reversals, full facts and dimensions, a visual dashboard, independent reconciliation, past-data generator, performance benchmarks, full-cluster checkpoint restore, and AI. The data-model document describes planned tables, not just existing ones.
 
 ## Validation status
 
-- All 12 tests passed inside the Python 3.12.10 API image, including four real PostgreSQL integration tests; none skipped.
-- Streaming smoke passed: initial history, create/update/post/delete, exact decimal totals, immutable posted invoices, and source transaction rollback.
-- One new invoice appeared in analytics after 1.267 seconds. This single observation is not a performance guarantee or percentile measurement.
-- Flink completed checkpoints, but crash recovery and full-cluster restart restoration are not yet tested or implemented as a lifecycle command.
-- Earlier infrastructure issues are resolved sufficiently for the smoke test. Bootstrap scripts are now packaged in database images; SQL Client retains Flink's normal startup configuration. Existing empty schemas were initialized without deleting their volumes.
-- Both database images also passed fresh-storage bootstrap checks in separate temporary containers; those test containers were removed afterward. Independent reconciliation, replay correctness, and load testing remain future work.
-- All project containers were stopped after testing; business data and checkpoint volumes were retained.
+- All 12 tests passed in Python 3.12.10, including four real PostgreSQL tests; none skipped.
+- Streaming smoke passed: initial sample data, create/update/post/delete, exact decimal totals, posted immutability, and source transaction rollback.
+- One invoice reached analytics in 1.267 seconds. This is one observation, not a percentile or performance guarantee.
+- Flink completed checkpoints. Crash recovery, full-cluster restore commands, independent reconciliation, replay correctness, and load tests remain unverified or unimplemented.
+- Startup fixes: setup scripts are packaged in database images; SQL Client keeps Flink's startup configuration. Empty schemas were initialized without deleting volumes.
+- Both database images passed fresh-storage checks in temporary containers, then those containers were removed.
+- Project containers were stopped after testing; business data and checkpoint volumes remain.
 
-Git is initialized locally. Nothing has been published to GitHub.
-
-Read [the runbook](RUNBOOK.md) before starting services, especially the current stop/resume limitation.
+Repository: [financial-streaming-portfolio](https://github.com/vkc99999/financial-streaming-portfolio) (private). Read the [runbook](RUNBOOK.md) before starting, especially its stop/resume limitation.
 
 ## How we will work
 
 Requirements → architecture alternatives → agreed decisions and ADRs → implementation → failure tests → revisit decisions.
 
-The accepted technology direction is PostgreSQL → Debezium → Kafka → Flink → analytics PostgreSQL → dashboard. Python and SQL are the preferred implementation languages; Docker Compose is the local environment. The pinned first-slice dependency combination passed the smoke test. Stronger recovery guarantees and the dashboard tool remain future decisions. Kubernetes and a lakehouse are deferred.
+We use Python, SQL, and Docker Compose for the flow above, with a dashboard planned. The pinned dependency versions passed the smoke test. Stronger recovery guarantees and the dashboard tool are still to be decided; Kubernetes and a lakehouse are deferred.
 
-This is an on-demand personal project. There are no scheduled jobs, background monitors, cloud resources, or recurring charges configured. Data generation, reconciliation, snapshots, and failure tests will be explicitly invoked.
+Run this project only when needed. No scheduled jobs, background monitors, cloud resources, or recurring charges are configured. Start data generation, reconciliation, snapshots, and failure tests manually.
 
 ## Design choices still to review
 
@@ -47,7 +45,7 @@ Financial scope is agreed: one company, USD, supplier invoices, partial payments
 
 Remaining modeling choices:
 1. Historical reporting: preserve the organizational assignment effective when an invoice was posted, even if the organization changes later.
-2. Snapshot facts: build these after transaction facts work. A snapshot represents an explicit observation time; the project will not imply that daily snapshots exist for days it was stopped.
+2. Snapshot facts: build these after transaction facts work. Each snapshot records a chosen observation time. Days when the project was stopped have no snapshot.
 
 The remaining items are proposed defaults. Architecture selection and ADRs precede implementation.
 
@@ -68,4 +66,4 @@ The remaining items are proposed defaults. Architecture selection and ADRs prece
 
 ## Portfolio evidence
 
-The eventual repository should contain runnable setup instructions, sample data configuration, migrations, ADRs, manual test commands, measured results, a short demo, and known limitations. Claims about scale and recovery must reference actual runs. Data is synthetic; this is not an SAP integration or an accounting-compliance product.
+Planned portfolio contents: setup instructions, sample data configuration, migrations, ADRs, manual tests, measured results, a short demo, and known limitations. Scale and recovery claims must link to actual runs. All data is generated for practice; this is not an SAP integration or an accounting-compliance product.
