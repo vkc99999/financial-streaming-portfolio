@@ -1,0 +1,9 @@
+{
+  "symptom": "Application connections fail although PostgreSQL reports healthy.",
+  "observations": [
+    {"id": "log1", "text": "Earlier bootstrap log: /usr/bin/env: bad interpreter: Permission denied"},
+    {"id": "log2", "text": "Next startup skips initialization because the database directory already exists"},
+    {"id": "log3", "text": "Authentication log says role app_writer does not exist"},
+    {"id": "check1", "text": "Source and analytics public schemas were confirmed empty"}
+  ]
+}

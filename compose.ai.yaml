@@ -1,0 +1,31 @@
+name: financial-incident-api
+services:
+  incident-db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile.incident
+    environment:
+      POSTGRES_USER: incident_admin
+      POSTGRES_DB: incidents
+      POSTGRES_PASSWORD: ${INCIDENT_ADMIN_PASSWORD:?Run python3 scripts/ai_setup.py}
+      INCIDENT_PASSWORD: ${INCIDENT_PASSWORD:?}
+    volumes:
+      - incident_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U incident_admin -d incidents && psql -U incident_admin -d incidents -Atc 'SELECT 1 FROM investigation LIMIT 1' >/dev/null"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  incident-api:
+    build: .
+    command: [uvicorn, app.investigation:app, --host, 0.0.0.0, --port, '8000']
+    ports: ['127.0.0.1:18781:8000']
+    environment:
+      API_KEY: ${API_KEY:?}
+      INCIDENT_PASSWORD: ${INCIDENT_PASSWORD:?}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+    depends_on:
+      incident-db: {condition: service_healthy}
+volumes:
+  incident_data:

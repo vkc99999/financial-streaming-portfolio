@@ -11,13 +11,17 @@ Goal: build a local supplier-invoice and payment system that continuously update
 - [Runbook](RUNBOOK.md): local setup, tests, stop behavior, and limitations.
 - [Streaming test evidence](evidence/2026-09-11-invoice-smoke.json), [fresh-database checks](evidence/2026-09-11-bootstrap.json), and [recorded incidents](evidence/incidents.json) for later AI investigation work.
 
+## AI learning: stage 1
+
+A separate [pipeline failure investigation API](docs/incident-api.md) accepts reports, calls an LLM, checks evidence quotes, and saves results in Postgres. It runs without Kafka/Flink. Local tests use mocked model responses; live model quality is not yet verified.
+
 ## What works now
 
 Python API → source PostgreSQL → Debezium → Kafka → Flink SQL → analytics PostgreSQL.
 
 Create invoices with lines, update draft due dates, delete drafts, and post invoices. A reporting endpoint lists current invoice totals. API validation, database transactions, and triggers protect the data. One sample invoice dated in the past tests the initial CDC snapshot.
 
-Not implemented yet: payments/reversals, full facts and dimensions, a visual dashboard, independent reconciliation, past-data generator, performance benchmarks, full-cluster checkpoint restore, and AI. The data-model document describes planned tables, not just existing ones.
+Not implemented yet: payments/reversals, full facts and dimensions, a visual dashboard, independent reconciliation, past-data generator, performance benchmarks, full-cluster checkpoint restore, and AI tools that inspect or repair live systems. The data-model document describes planned tables, not just existing ones.
 
 ## Validation status
 
