@@ -1,12 +1,33 @@
 {
   "date": "2026-09-13",
   "feature": "Stage 1 pipeline failure investigation API",
-  "tests": {"passed": 20, "skipped": 4, "new_feature_passed": 12},
+  "tests": {
+    "passed": 20,
+    "skipped": 4,
+    "new_feature_passed": 12
+  },
   "database": "Temporary local PostgreSQL 14.18, Unix socket only; stopped after tests",
   "http": "Real local Uvicorn HTTP tests: authentication, validation, POST and GET",
   "model": "Mocked Responses API responses; no live model call or quality score",
-  "compose": "Configuration validation passed; image build and container startup not verified",
-  "blocker": "Docker engine failed to dial its internal containerd socket; pending build command was cancelled",
+  "compose": "Build, startup, database initialization, tests, and host HTTP health passed after restart",
+  "blocker": null,
   "skipped_scope": "Four existing source-database tests; financial streaming stack not started",
-  "limitations": ["PostgreSQL 16.9 container compatibility needs a working Docker engine", "Live calls require OPENAI_API_KEY and OPENAI_MODEL in .env.ai", "Evidence quote checks do not prove a diagnosis is correct"]
+  "limitations": [
+    "Live calls require OPENAI_API_KEY and OPENAI_MODEL in .env.ai",
+    "Evidence quote checks do not prove a diagnosis is correct"
+  ],
+  "docker_followup": {
+    "engine": "28.0.1",
+    "recovery": "Normal Docker Desktop restart; no data reset",
+    "database": "PostgreSQL 16.9 container",
+    "python": "3.12.10 container",
+    "image_build": "passed",
+    "fresh_database_initialization": "passed",
+    "tests_passed": 20,
+    "tests_skipped": 4,
+    "new_feature_tests_passed": 12,
+    "host_http_health": "passed",
+    "model_configured": false,
+    "shutdown": "Incident containers stopped after tests; volume retained"
+  }
 }
