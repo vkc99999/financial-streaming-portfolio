@@ -1,5 +1,7 @@
 # Requirements — review draft
 
+This document covers the original financial workload. The [expanded project requirements](docs/portfolio-roadmap.md) add batch data-quality detection, ML comparisons, and investigation workflows. Earlier exclusions of AI/lakehouse work describe the initial streaming slice; later additions need separate decisions. Local, on-demand operation remains the default.
+
 ## Product and users
 
 A fictional company records supplier invoices, cost center/project expenses, payments, and reversals. Finance analysts view outstanding amounts and spending assignments; data engineers verify delivery and recovery.

@@ -1,5 +1,7 @@
 # Architecture options — review draft
 
+This is the financial streaming architecture. See the [expanded platform design](docs/portfolio-roadmap.md) for planned batch metrics, ML, monitoring, and async investigations. Those additions have not changed the running services or selected a cloud/queue/framework stack.
+
 Status: option A accepted; see [ADR 001](ADRs/001-local-streaming-topology.md). The comparison explains why. Financial scope: one company, USD, invoices, partial payments, and reversals. Python and SQL are preferred; run everything manually when needed.
 
 ## Decision 1: how to capture and process changes

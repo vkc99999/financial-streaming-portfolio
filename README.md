@@ -2,7 +2,9 @@
 
 Status: first invoice flow verified end to end on 2026-09-11; 12 validation/database tests and the streaming smoke test passed. This is a learning project, not a complete financial platform.
 
-Goal: build a local supplier-invoice and payment system that continuously updates analytics while running. Verify reporting through late changes, duplicate delivery, crashes, and replay before adding AI.
+Goal: use a financial data pipeline to learn how to detect and investigate data problems. Keep building correct streaming analytics, and add batch quality checks, rule-versus-ML comparisons, and evidence-based AI investigation in separate steps.
+
+New direction: [two-project roadmap](docs/portfolio-roadmap.md). Project 1 extends this repo; a healthcare referral assistant belongs in a later, separate repo. Batch checks, ML training, automatic monitoring, agent tools, and recovery approvals are planned, not implemented.
 
 - [Requirements](requirements.md): scope, operating limits, success criteria, and test scenarios.
 - [Data model](data-model.md): operational tables, analytical facts and dimensions, and financial rules.
